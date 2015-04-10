@@ -1,0 +1,40 @@
+plugins {
+    id 'java'
+    id 'com.github.johnrengelman.shadow' version '1.2.1'
+}
+
+apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin: 'application'
+apply plugin: 'com.github.johnrengelman.shadow'
+
+mainClassName = 'com.github.s4nchez.playground.HelloUtterlyIdle'
+
+sourceCompatibility = 1.7
+version = '1.0'
+
+repositories {
+    mavenCentral()
+    maven {
+         url "http://repo.bodar.com/"
+        }
+}
+
+task uberjar(type: Jar) {
+    from files(sourceSets.main.output.classesDir)
+    from { configurations.compile.collect { zipTree(it) } } {
+        exclude "META-INF/*.SF"
+        exclude "META-INF/*.DSA"
+        exclude "META-INF/*.RSA"
+    }
+
+    manifest {
+        attributes 'Main-Class': 'com.github.s4nchez.playground.HelloUtterlyIdle'
+    }
+}
+
+
+dependencies {
+    compile group: 'com.googlecode.utterlyidle', name: 'utterlyidle', version: '1.31'
+    testCompile group: 'junit', name: 'junit', version: '4.11'
+}

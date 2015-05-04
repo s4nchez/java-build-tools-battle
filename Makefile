@@ -1,11 +1,9 @@
 SRCDIR=src/main/java
 OUTDIR=out/make
 MAIN_CLASS=com.github.s4nchez.playground.HelloUtterlyIdle
-
 SRCS:=$(shell find $(SRCDIR) -name '*.java')
-JAR=out/example.jar
-BUILD_DEPS:=$(wildcard lib/build/*.jar)
-RUNTIME_DEPS:=$(wildcard lib/runtime/*.jar)
+JAR=out/classes.jar
+FATJAR=out/java-playground.jar
 
 pathify = $(subst $(eval) ,:,$1)
 
@@ -13,21 +11,22 @@ pathify = $(subst $(eval) ,:,$1)
 deps: make/build.dependencies make/shavenmaven.jar
 	java -jar make/shavenmaven.jar make lib
 
-.PHONY: all
-all: $(JAR)
+.PHONY: jar
+jar: $(FATJAR)
 
-$(JAR): $(SRCS) $(BUILD_DEPS) $(OUTDIR)/manifest.mf
+$(FATJAR): $(SRCS)
+	$(eval TMP := $(call pathify,$(wildcard lib/build/*.jar)))
 	@mkdir -p $(OUTDIR)/classes
-	javac -source 1.6 -cp $(call pathify,$(BUILD_DEPS)) -d $(OUTDIR)/classes $(SRCS)
-	jar cfme $@ $(OUTDIR)/manifest.mf $(MAIN_CLASS) -C $(OUTDIR)/classes .
-
-$(OUTDIR)/manifest.mf: $(LIBS)
-	@mkdir -p $(dir $@)
-	echo "Class-Path: $(RUNTIME_DEPS:%=../%)" > $@
+	javac -source 1.7 -cp $(call pathify,$(wildcard lib/build/*.jar)) -d $(OUTDIR)/classes $(SRCS)
+	jar cfe $(JAR) $(MAIN_CLASS) -C $(OUTDIR)/classes .
+	java -jar make/JarSplicePlus.jar -i $(JAR) $(wildcard lib/build/*.jar) -o $@ -m $(MAIN_CLASS)
 
 .PHONY: clean
 clean:
-	rm -rf $(OUTDIR) $(JAR)
+	rm -rf $(OUTDIR) $(JAR) $(FATJAR) lib
+
+.PHONY:
+all: deps jar
 
 .PHONY:
 again: clean all
